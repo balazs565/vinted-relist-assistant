@@ -1,6 +1,6 @@
 # 🔄 Vinted Relist Assistant
 
-A Chrome / Brave browser extension that helps you **manually relist your Vinted items** in a safer, more human-like way — with randomized delays, confirmation steps, and full data backup before deletion.
+A Chromium based browser extension that helps you **manually relist your Vinted items** in a safer, more human-like way — with randomized delays, confirmation steps, and full data backup before deletion.
 
 > ⚠️ **Disclaimer:** Relisting items may violate Vinted's Terms of Service. Use this tool at your own risk and sparingly. The extension is designed to minimize detection risk, but no tool can guarantee immunity from platform action.
 
