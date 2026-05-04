@@ -39,12 +39,7 @@ git clone https://github.com/balazs565/vinted-relist-assistant.git
 
 Or download the ZIP from the green **Code** button above.
 
-### 2. Generate icons
-
-Open `icons/generate_icons.html` in your browser.
-Download all three icons (`icon16.png`, `icon48.png`, `icon128.png`) and place them in the `icons/` folder.
-
-### 3. Load in Chrome / Brave
+### 2. Load in Chrome / Brave
 
 1. Go to `chrome://extensions`
 2. Enable **Developer mode** (top-right toggle)
