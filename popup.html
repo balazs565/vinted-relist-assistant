@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vinted Relist Assistant</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #1d7a8c;
+      --primary-dark: #155f6e;
+      --primary-light: #d0edf1;
+      --danger: #dc3545;
+      --success: #28a745;
+      --warn: #ffc107;
+      --bg: #f7f9fa;
+      --card: #fff;
+      --text: #222;
+      --muted: #666;
+      --border: #e0e4e8;
+      --radius: 8px;
+    }
+
+    body {
+      width: 380px;
+      min-height: 440px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 13px;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    /* ── Header ─────────────────────────────────────────────────────────── */
+    .header {
+      background: var(--primary);
+      color: #fff;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .header-logo { font-size: 22px; line-height: 1; }
+    .header-info { flex: 1; }
+    .header-info h1 { font-size: 14px; font-weight: 700; }
+    .header-info p  { font-size: 11px; opacity: .8; margin-top: 1px; }
+    .header-badge {
+      background: rgba(255,255,255,.25);
+      border-radius: 20px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    /* ── Tabs ────────────────────────────────────────────────────────────── */
+    .tabs {
+      display: flex;
+      border-bottom: 2px solid var(--border);
+      background: #fff;
+    }
+    .tab {
+      flex: 1;
+      padding: 10px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 12.5px;
+      cursor: pointer;
+      color: var(--muted);
+      border: none;
+      background: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: color .15s;
+    }
+    .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+    .tab:hover:not(.active) { color: var(--text); }
+
+    /* ── Tab panels ─────────────────────────────────────────────────────── */
+    .panel { display: none; padding: 12px 14px; }
+    .panel.active { display: block; }
+
+    /* ── Empty state ─────────────────────────────────────────────────────── */
+    .empty {
+      text-align: center;
+      padding: 32px 16px;
+      color: var(--muted);
+    }
+    .empty-icon { font-size: 40px; margin-bottom: 10px; }
+    .empty p    { font-size: 13px; line-height: 1.5; }
+    .empty a    { color: var(--primary); text-decoration: none; font-weight: 600; }
+    .empty a:hover { text-decoration: underline; }
+
+    /* ── Relist card ─────────────────────────────────────────────────────── */
+    .relist-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+    .relist-card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .relist-title {
+      font-weight: 700;
+      font-size: 13px;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .relist-price { font-size: 12px; color: var(--muted); white-space: nowrap; }
+
+    .status-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .status-pending_deletion { background: #fff3cd; color: #856404; }
+    .status-waiting_delay    { background: var(--primary-light); color: var(--primary-dark); }
+    .status-ready_to_repost  { background: #d4edda; color: #155724; }
+    .status-reposting        { background: #cce5ff; color: #004085; }
+
+    /* Countdown within a card */
+    .countdown-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg);
+      border-radius: 6px;
+      padding: 6px 10px;
+      margin: 8px 0;
+    }
+    .countdown-label { font-size: 11.5px; color: var(--muted); flex: 1; }
+    .countdown-val   { font-size: 20px; font-weight: 700; color: var(--primary); font-variant-numeric: tabular-nums; }
+
+    /* Progress bar */
+    .progress-bar { height: 4px; background: var(--border); border-radius: 2px; margin: 6px 0; overflow: hidden; }
+    .progress-fill { height: 100%; background: var(--primary); border-radius: 2px; transition: width .5s linear; }
+
+    /* Card actions */
+    .card-actions { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+
+    /* ── Buttons ─────────────────────────────────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 6px 13px;
+      border-radius: 20px; border: none;
+      font-size: 12px; font-weight: 600;
+      cursor: pointer; font-family: inherit;
+      transition: filter .15s;
+    }
+    .btn:hover:not(:disabled) { filter: brightness(.9); }
+    .btn:disabled { opacity: .55; cursor: not-allowed; }
+    .btn-primary   { background: var(--primary); color: #fff; }
+    .btn-secondary { background: #eee; color: #333; border: 1px solid #ccc; }
+    .btn-danger    { background: var(--danger); color: #fff; }
+    .btn-success   { background: var(--success); color: #fff; }
+
+    /* ── Settings panel ──────────────────────────────────────────────────── */
+    .setting-group { margin-bottom: 18px; }
+    .setting-group:last-child { margin-bottom: 0; }
+    .setting-label {
+      font-weight: 700;
+      font-size: 12.5px;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .setting-desc { font-size: 11.5px; color: var(--muted); margin-bottom: 8px; line-height: 1.4; }
+
+    /* Range slider */
+    .range-row { display: flex; align-items: center; gap: 8px; }
+    .range-row input[type=range] { flex: 1; accent-color: var(--primary); }
+    .range-val {
+      min-width: 30px; text-align: right;
+      font-weight: 700; color: var(--primary);
+    }
+
+    /* Toggle switch */
+    .toggle-wrap { display: flex; align-items: center; justify-content: space-between; }
+    .toggle { position: relative; width: 38px; height: 21px; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute; inset: 0;
+      background: #ccc; border-radius: 21px;
+      cursor: pointer; transition: background .2s;
+    }
+    .toggle-slider::before {
+      content: '';
+      position: absolute;
+      width: 15px; height: 15px;
+      left: 3px; bottom: 3px;
+      background: #fff; border-radius: 50%;
+      transition: transform .2s;
+    }
+    .toggle input:checked + .toggle-slider { background: var(--primary); }
+    .toggle input:checked + .toggle-slider::before { transform: translateX(17px); }
+
+    /* Save button */
+    .save-row { margin-top: 18px; text-align: right; }
+
+    /* ── Footer ─────────────────────────────────────────────────────────── */
+    .footer {
+      border-top: 1px solid var(--border);
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #fff;
+    }
+    .footer a { font-size: 11px; color: var(--muted); text-decoration: none; }
+    .footer a:hover { color: var(--primary); }
+    .footer-status { font-size: 11px; color: var(--muted); }
+
+    /* ── Toast ───────────────────────────────────────────────────────────── */
+    #popup-toast {
+      position: fixed; bottom: 44px; left: 14px; right: 14px;
+      padding: 9px 13px;
+      border-radius: 7px;
+      color: #fff; font-size: 12.5px; font-weight: 500;
+      z-index: 999;
+      display: none;
+      transition: opacity .3s;
+    }
+    #popup-toast.show { display: block; }
+    #popup-toast.toast-error   { background: var(--danger); }
+    #popup-toast.toast-success { background: var(--success); }
+    #popup-toast.toast-info    { background: var(--primary); }
+
+    hr { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-logo">🔄</div>
+    <div class="header-info">
+      <h1>Vinted Relist Assistant</h1>
+      <p>Safe, manual relisting with delays</p>
+    </div>
+    <span class="header-badge" id="active-count">0 active</span>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" data-tab="relists">Active Relists</button>
+    <button class="tab"        data-tab="settings">Settings</button>
+  </div>
+
+  <!-- Panel: Active Relists -->
+  <div class="panel active" id="panel-relists">
+
+    <div id="relist-list">
+      <!-- Populated by popup.js -->
+    </div>
+
+    <div id="empty-state" class="empty" style="display:none">
+      <div class="empty-icon">📭</div>
+      <p>No active relists.</p>
+      <p style="margin-top:8px">
+        Go to your <a id="open-vinted" href="#">Vinted listings page</a>
+        and click <strong>"🔄 Relist safely"</strong> next to an item.
+      </p>
+    </div>
+
+  </div>
+
+  <!-- Panel: Settings -->
+  <div class="panel" id="panel-settings">
+
+    <div class="setting-group">
+      <div class="setting-label">Minimum delay (minutes)</div>
+      <div class="setting-desc">How long to wait at minimum before reposting after deletion.</div>
+      <div class="range-row">
+        <input type="range" id="s-min" min="1" max="60" step="1" value="5" />
+        <span class="range-val" id="s-min-val">5</span>
+      </div>
+    </div>
+
+    <div class="setting-group">
+      <div class="setting-label">Maximum delay (minutes)</div>
+      <div class="setting-desc">Upper bound of the randomized delay window.</div>
+      <div class="range-row">
+        <input type="range" id="s-max" min="1" max="120" step="1" value="10" />
+        <span class="range-val" id="s-max-val">10</span>
+      </div>
+    </div>
+
+    <div class="setting-group">
+      <div class="setting-label">Your Vinted domain</div>
+      <div class="setting-desc">
+        The country-specific Vinted site you use. Used for "Open Vinted" links when no tab is already open.
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span style="font-size:13px;color:#555;white-space:nowrap;">https://www.</span>
+        <input type="text" id="s-domain" placeholder="vinted.ro"
+               style="flex:1;padding:7px 10px;border:1px solid #ccc;border-radius:6px;font-size:13px;font-family:inherit;" />
+      </div>
+    </div>
+
+    <hr />
+
+    <div class="setting-group">
+      <div class="setting-label">
+        Autofill sell form
+        <label class="toggle">
+          <input type="checkbox" id="s-autofill" checked />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="setting-desc">
+        When enabled, the extension will type your saved title, description and price
+        into the Vinted sell form using human-like delays.
+      </div>
+    </div>
+
+    <div class="setting-group">
+      <div class="setting-label">
+        Manual-only mode
+        <label class="toggle">
+          <input type="checkbox" id="s-manual" checked />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="setting-desc">
+        Requires your confirmation at every step. Disabling is not recommended —
+        the extension will never auto-publish regardless of this setting.
+      </div>
+    </div>
+
+    <div class="save-row">
+      <button class="btn btn-primary" id="save-settings">Save settings</button>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <a href="#" id="open-vinted-footer">Open Vinted</a>
+    <span class="footer-status" id="footer-status">Ready</span>
+  </div>
+
+  <!-- Toast -->
+  <div id="popup-toast"></div>
+
+  <script src="utils.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

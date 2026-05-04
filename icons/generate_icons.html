@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<!--
+  Open this file in your browser to generate the three icon PNG files needed
+  by the extension (icon16.png, icon48.png, icon128.png).
+  Right-click each image → "Save image as…" → save into this icons/ folder.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Generate Extension Icons</title>
+  <style>
+    body { font-family: sans-serif; padding: 24px; background: #f0f4f5; }
+    h1   { margin-bottom: 6px; }
+    p    { margin-bottom: 20px; color: #555; font-size: 14px; }
+    .row { display: flex; gap: 24px; align-items: flex-end; flex-wrap: wrap; }
+    .item { text-align: center; }
+    .item canvas { display: block; border-radius: 22%; box-shadow: 0 4px 12px rgba(0,0,0,.2); }
+    .item a {
+      display: inline-block; margin-top: 8px;
+      padding: 6px 14px; background: #1d7a8c; color: #fff;
+      border-radius: 20px; text-decoration: none; font-size: 13px; font-weight: 600;
+    }
+    .item p { font-size: 12px; margin: 4px 0 0; color: #666; }
+  </style>
+</head>
+<body>
+  <h1>🔄 Vinted Relist — Icon Generator</h1>
+  <p>Click each download link to save the PNG icon file. Place all three in the <code>icons/</code> folder.</p>
+
+  <div class="row" id="icons"></div>
+
+  <script>
+    const sizes = [16, 48, 128];
+
+    sizes.forEach(size => {
+      const canvas = document.createElement('canvas');
+      canvas.width  = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+
+      // Background circle
+      ctx.fillStyle = '#1d7a8c';
+      ctx.beginPath();
+      ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Arrow / refresh symbol
+      const cx = size / 2;
+      const cy = size / 2;
+      const r  = size * 0.28;
+      const lw = Math.max(1, size * 0.10);
+
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth   = lw;
+      ctx.lineCap     = 'round';
+
+      // Draw arc (270° sweep)
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, -Math.PI * 0.1, Math.PI * 1.6);
+      ctx.stroke();
+
+      // Arrowhead at end of arc
+      const aLen = size * 0.13;
+      const endX = cx + r * Math.cos(Math.PI * 1.6);
+      const endY = cy + r * Math.sin(Math.PI * 1.6);
+
+      ctx.beginPath();
+      ctx.moveTo(endX, endY);
+      ctx.lineTo(endX - aLen * 0.7, endY - aLen);
+      ctx.moveTo(endX, endY);
+      ctx.lineTo(endX + aLen, endY - aLen * 0.4);
+      ctx.stroke();
+
+      // Build download link
+      const a = document.createElement('a');
+      a.href     = canvas.toDataURL('image/png');
+      a.download = `icon${size}.png`;
+      a.textContent = `⬇ Download icon${size}.png`;
+
+      const label = document.createElement('p');
+      label.textContent = `${size}×${size}`;
+
+      const item = document.createElement('div');
+      item.className = 'item';
+      item.append(canvas, label, a);
+
+      document.getElementById('icons').appendChild(item);
+    });
+  </script>
+</body>
+</html>
